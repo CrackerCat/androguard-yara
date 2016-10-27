@@ -165,6 +165,8 @@ define_function(permission_lookup)
   struct permissions *a;
 
   a = obj->data;
+  if (a == NULL) { return_integer(0); }
+  
   json_t* list_perms = (json_t*) a->permissions;
   json_t* list_new_perms = (json_t*) a->new_permissions;
 
@@ -208,7 +210,6 @@ define_function(activity_lookup_regex)
 
   json_array_foreach(list, index, value)
   {
-    //printf("%s\n", json_string_value(value));
     if (yr_re_match(regexp_argument(1), json_string_value(value)) > 0)
     {
       result = 1;
@@ -255,7 +256,6 @@ define_function(service_lookup_regex)
 
   json_array_foreach(list, index, value)
   {
-    //printf("%s\n", json_string_value(value));
     if (yr_re_match(regexp_argument(1), json_string_value(value)) > 0)
     {
       result = 1;
@@ -302,7 +302,6 @@ define_function(filter_lookup_regex)
 
   json_array_foreach(list, index, value)
   {
-    //printf("%s\n", json_string_value(value));
     if (yr_re_match(regexp_argument(1), json_string_value(value)) > 0)
     {
       result = 1;
@@ -395,7 +394,6 @@ define_function(url_lookup_regex)
 
   json_array_foreach(list, index, value)
   {
-    //printf("%s\n", json_string_value(value));
     if (yr_re_match(regexp_argument(1), json_string_value(value)) > 0)
     {
       result = 1;
