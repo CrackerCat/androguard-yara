@@ -18,10 +18,11 @@ limitations under the License.
   Changelog:
     - 2016/06/09: Start changelog and add funtions for "filters"
     - 2016/06/16: Hotfix min/max/target sdk version
+    - 2016/12/12: Added certificate.not_before and certificate.not_after functions
 */
 
-#include <string.h>
 #include <jansson.h>
+#include <string.h>
 
 
 #include <yara/re.h>
@@ -77,6 +78,100 @@ void remove_colon(const char* input, char* output) {
       output[pos_out++] = input[i];
     }
   }
+}
+
+/*
+  Function to detect certificate.not_before (with regex)
+*/
+define_function(certificate_not_before_lookup_regex)
+{
+  YR_OBJECT* obj = parent();
+  char *value = NULL;
+  uint64_t result = 0;
+  json_t *val;
+
+  val = json_object_get(obj->data, "not_before");
+  if (val) {
+    value = (char *)json_string_value(val);
+  }
+
+  if (value) {
+    if (yr_re_match(regexp_argument(1), value) > 0) {
+      result = 1;
+    }
+  }
+
+  return_integer(result);
+}
+
+/*
+  Function to detect certificate.not_before (with string)
+*/
+define_function(certificate_not_before_lookup_string)
+{
+  YR_OBJECT* obj = parent();
+  char *value = NULL;
+  uint64_t result = 0;
+  json_t *val;
+  val = json_object_get(obj->data, "not_before");
+
+  if (val != NULL) {
+    value = (char *)json_string_value(val);    
+  }
+
+  if (value != NULL) {
+    if (strcasecmp(string_argument(1), value) == 0) {
+      result = 1;
+    }
+  }
+
+  return_integer(result);
+}
+
+/*
+  Function to detect certificate.not_after (with regex)
+*/
+define_function(certificate_not_after_lookup_regex)
+{
+  YR_OBJECT* obj = parent();
+  char *value = NULL;
+  uint64_t result = 0;
+  json_t *val;
+
+  val = json_object_get(obj->data, "not_after");
+  if (val) {
+    value = (char *)json_string_value(val);
+  }
+
+  if (value) {
+    if (yr_re_match(regexp_argument(1), value) > 0) {
+      result = 1;
+    }
+  }
+
+  return_integer(result);
+}
+
+/*
+  Function to detect certificate.not_after (with string)
+*/
+define_function(certificate_not_after_lookup_string)
+{
+  YR_OBJECT* obj = parent();
+  char *value = NULL;
+  uint64_t result = 0;
+  json_t *val;
+  val = json_object_get(obj->data, "not_after");
+
+  if (val != NULL) {
+    value = (char *)json_string_value(val);    
+  }
+  if (value != NULL) {
+    if (strcasecmp(string_argument(1), value) == 0) {
+      result = 1;
+    }
+  }
+  return_integer(result);
 }
 
 /*
@@ -506,6 +601,10 @@ begin_declarations;
     declare_function("issuer", "r", "i", certificate_issuer_lookup);
     declare_function("subject", "r", "i", certificate_subject_lookup);
     declare_function("sha1", "s", "i", certificate_sha1_lookup);
+    declare_function("not_after", "r", "i", certificate_not_after_lookup_regex);
+    declare_function("not_after", "s", "i", certificate_not_after_lookup_string);
+    declare_function("not_before", "r", "i", certificate_not_before_lookup_regex);
+    declare_function("not_before", "s", "i", certificate_not_before_lookup_string);
   end_struct("certificate");
   
   declare_integer("min_sdk");
