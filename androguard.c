@@ -19,6 +19,7 @@ limitations under the License.
     - 2016/06/09: Start changelog and add funtions for "filters"
     - 2016/06/16: Hotfix min/max/target sdk version
     - 2016/12/12: Added certificate.not_before and certificate.not_after functions
+    - 2017/01/11: Added displayed_version functions
 */
 
 #include <jansson.h>
@@ -476,6 +477,43 @@ define_function(receiver_lookup_string)
 }
 
 /*
+  Function to detect displayed version (with regex)
+*/
+define_function(displayed_version_lookup_regex)
+{
+  YR_OBJECT* obj = get_object(module(), "displayed_version");
+  char* value = obj->data;
+  uint64_t result = 0;
+
+  if (value) {
+    if (yr_re_match(regexp_argument(1), value) > 0) {
+      result = 1;
+    }
+  }
+ 
+  return_integer(result);
+}
+
+/*
+  Function to detect displayed version (with string)
+*/
+define_function(displayed_version_lookup_string)
+{
+  YR_OBJECT* obj = get_object(module(), "displayed_version");
+  char* value = obj->data;
+  uint64_t result = 0;
+
+  if (value) {
+    if (strcasecmp(string_argument(1), value) == 0) {
+      result = 1;
+    }
+  }
+ 
+  return_integer(result);
+}
+
+
+/*
   Function to detect url (with regex)
 */
 define_function(url_lookup_regex)
@@ -611,6 +649,9 @@ begin_declarations;
   declare_integer("max_sdk");
   declare_integer("target_sdk");
 
+  declare_function("displayed_version", "r", "i", displayed_version_lookup_regex);
+  declare_function("displayed_version", "s", "i", displayed_version_lookup_string);
+
   declare_function("url", "r", "i", url_lookup_regex);
   declare_function("url", "s", "i", url_lookup_string);
 
@@ -678,6 +719,7 @@ int module_load(
   YR_OBJECT* filter_obj = NULL;
   YR_OBJECT* receiver_obj = NULL;
   YR_OBJECT* url_obj = NULL;
+  YR_OBJECT* displayed_version_obj = NULL;
   struct permissions *permissions_struct = NULL;
 
   int version, perms_number;
@@ -709,6 +751,7 @@ int module_load(
   filter_obj = get_object(module_object, "filter");
   receiver_obj = get_object(module_object, "receiver");
   url_obj = get_object(module_object, "url");
+  displayed_version_obj = get_object(module_object, "displayed_version");
 
 
   /* Set SDK versions
@@ -757,6 +800,10 @@ int module_load(
   /* Extract app_name */
   appname_obj->data = (char *)json_string_value(
                                     json_object_get(json, "app_name"));
+
+  /* Extract displayed_version */
+  displayed_version_obj->data = (char *)json_string_value(
+                                    json_object_get(json, "displayed_version"));  
 
   /* Extract package_name */
   package_name_obj->data = (char *)json_string_value(
